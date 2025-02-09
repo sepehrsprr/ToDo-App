@@ -1,0 +1,123 @@
+{% extends 'todo/base.html' %}
+
+{% block title %}Tasks - Todo App{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="mb-3">My Tasks</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'task_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>New Task
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" name="search" class="form-control" placeholder="Search tasks..." value="{{ search_query }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="priority" class="form-select">
+                            <option value="">All Priority</option>
+                            <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+                            <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium</option>
+                            <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"s" %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if tasks %}
+    {% for task in tasks %}
+    <div class="card task-item mb-3 {% if task.completed %}completed{% endif %} {% if task.priority == 'high' %}high-priority{% endif %}">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <form method="post" action="{% url 'task_toggle_complete' task.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link text-decoration-none p-0" data-bs-toggle="tooltip" title="Toggle Complete">
+                            <i class="fas fa-check-circle fa-lg {% if task.completed %}text-success{% else %}text-secondary{% endif %}"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col">
+                    <h5 class="card-title mb-1 {% if task.completed %}text-muted text-decoration-line-through{% endif %}">
+                        {{ task.title }}
+                    </h5>
+                    <p class="card-text text-muted small mb-1">{{ task.description|truncatewords:30 }}</p>
+                    <div class="mt-2">
+                        {% if task.category %}
+                        <span class="badge category-badge" style="background-color: {{ task.category.color }}">
+                            {{ task.category.name }}
+                        </span>
+                        {% endif %}
+                        <span class="badge bg-{% if task.priority == 'high' %}danger{% elif task.priority == 'medium' %}warning{% else %}info{% endif %} me-1">
+                            {{ task.priority|title }}
+                        </span>
+                        <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}primary{% else %}secondary{% endif %} me-1">
+                            {% if task.status == 'in_progress' %}In Progress{% else %}{{ task.status|title }}{% endif %}
+                        </span>
+                        {% if task.due_date %}
+                        <span class="badge bg-light text-dark">
+                            <i class="far fa-calendar-alt me-1"></i>
+                            {{ task.due_date|date:"M d, Y" }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-auto task-actions">
+                    <a href="{% url 'task_update' task.pk %}" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="tooltip" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'task_delete' task.pk %}" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No tasks found</h4>
+        <p class="text-muted">Create your first task to get started!</p>
+        <a href="{% url 'task_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Create Task
+        </a>
+    </div>
+{% endif %}
+{% endblock %} 

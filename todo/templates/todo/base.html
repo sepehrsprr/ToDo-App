@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Todo App{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #673ab7;
+            --secondary-color: #9575cd;
+            --success-color: #4caf50;
+            --danger-color: #f44336;
+            --purple-light: #ede7f6;
+            --purple-dark: #4527a0;
+            --purple-accent: #7c4dff;
+            --gradient-primary: linear-gradient(135deg, #673ab7 0%, #9c27b0 100%);
+            --gradient-dark: linear-gradient(135deg, #311b92 0%, #4a148c 100%);
+            --gradient-light: linear-gradient(135deg, #ede7f6 0%, #e1bee7 100%);
+        }
+        
+        [data-bs-theme="light"] {
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-color: #212529;
+            --border-color: rgba(103, 58, 183, 0.1);
+            --hover-bg: var(--purple-light);
+            --gradient-bg: linear-gradient(135deg, #f5f5f5 0%, #ede7f6 100%);
+            --task-bg: rgba(255, 255, 255, 0.7);
+            --task-hover: rgba(255, 255, 255, 0.9);
+        }
+        
+        [data-bs-theme="dark"] {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --border-color: rgba(156, 39, 176, 0.2);
+            --hover-bg: rgba(103, 58, 183, 0.15);
+            --gradient-bg: linear-gradient(135deg, #121212 0%, #311b92 100%);
+            --task-bg: rgba(49, 27, 146, 0.4);
+            --task-hover: rgba(49, 27, 146, 0.6);
+        }
+        
+        body {
+            background: var(--gradient-bg);
+            min-height: 100vh;
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .navbar {
+            background: var(--gradient-dark) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,.1);
+            transition: all 0.3s ease;
+            background: var(--card-bg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(103, 58, 183, 0.2);
+        }
+        
+        .btn-primary {
+            background: var(--gradient-primary) !important;
+            border: none !important;
+            box-shadow: 0 4px 15px rgba(103, 58, 183, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(103, 58, 183, 0.4);
+        }
+        
+        .btn {
+            border-radius: 25px;
+            padding: 10px 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255,255,255,0.2), transparent);
+            clip-path: polygon(0 0, 100% 0, 100% 25%, 0 55%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover::after {
+            transform: translateY(100%);
+        }
+        
+        .task-item {
+            border: none;
+            position: relative;
+            margin-bottom: 1rem;
+            background: var(--task-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .task-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--gradient-primary);
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .task-item:hover {
+            background: var(--task-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(103, 58, 183, 0.2);
+        }
+        
+        .task-item.completed {
+            background: var(--hover-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .task-item.completed::before {
+            background: linear-gradient(135deg, #4caf50 0%, #81c784 100%);
+        }
+        
+        .task-item.high-priority::before {
+            background: linear-gradient(135deg, #f44336 0%, #ef5350 100%);
+        }
+        
+        .task-actions {
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+        
+        .task-item:hover .task-actions {
+            opacity: 1;
+        }
+        
+        .category-badge {
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            background: var(--gradient-primary);
+            border: none;
+            box-shadow: 0 2px 10px rgba(103, 58, 183, 0.2);
+        }
+
+        [data-bs-theme="dark"] .text-muted {
+            color: #9a9a9a !important;
+        }
+
+        [data-bs-theme="dark"] .card {
+            background: linear-gradient(165deg, rgba(49, 27, 146, 0.4) 0%, rgba(74, 20, 140, 0.4) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        [data-bs-theme="dark"] .btn-outline-secondary {
+            color: #b39ddb;
+            border-color: #b39ddb;
+            background: transparent;
+        }
+
+        [data-bs-theme="dark"] .btn-outline-secondary:hover {
+            color: #212529;
+            background: linear-gradient(135deg, #b39ddb 0%, #9575cd 100%);
+            border-color: transparent;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .theme-toggle i {
+            transition: transform 0.5s ease;
+        }
+
+        .theme-toggle:hover i {
+            transform: rotate(360deg);
+        }
+
+        .form-control {
+            border-radius: 15px;
+            border: 2px solid transparent;
+            background: var(--card-bg);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--purple-accent);
+            box-shadow: 0 0 0 0.25rem rgba(103, 58, 183, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--purple-accent);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .alert {
+            border-radius: 15px;
+            border: none;
+            background: var(--gradient-light);
+            box-shadow: 0 4px 15px rgba(0,0,0,.1);
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(105, 240, 174, 0.1) 100%);
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(255, 82, 82, 0.1) 100%);
+        }
+
+        [data-bs-theme="dark"] .alert {
+            background: linear-gradient(135deg, rgba(49, 27, 146, 0.4) 0%, rgba(74, 20, 140, 0.4) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 12px;
+        }
+
+        .dropdown-menu {
+            border-radius: 15px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        [data-bs-theme="dark"] .dropdown-menu {
+            background: linear-gradient(165deg, rgba(49, 27, 146, 0.4) 0%, rgba(74, 20, 140, 0.4) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+        }
+
+        .dropdown-item {
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: var(--gradient-primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'task_list' %}">
+                <i class="fas fa-check-double me-2"></i>Todo App
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'task_list' %}">Tasks</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'category_list' %}">Categories</a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <span class="nav-link theme-toggle" id="themeToggle">
+                            <i class="fas fa-moon"></i>
+                        </span>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <span class="nav-link">Welcome, {{ user.username }}</span>
+                        </li>
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-link border-0 bg-transparent">
+                                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                                </button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Enable Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+
+        // Theme toggling functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const html = document.documentElement;
+            const icon = themeToggle.querySelector('i');
+
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            html.setAttribute('data-bs-theme', savedTheme);
+            updateIcon(savedTheme);
+
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = html.getAttribute('data-bs-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                html.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateIcon(newTheme);
+            });
+
+            function updateIcon(theme) {
+                icon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            }
+        });
+    </script>
+</body>
+</html> 
